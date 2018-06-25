@@ -33,7 +33,7 @@ Mesh.reg                            =   []; % =Reg; Gaussian regularisation matr
 
 
 % load existing mesh
-M=load('..\resources\SA0602.mat'); %cyl tank 32 chn from zz
+M=load('..\resources\SA060.mat'); %cyl tank 32 chn from zz
 
 % adjust geometry here
 
