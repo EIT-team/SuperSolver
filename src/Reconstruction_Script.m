@@ -4,18 +4,19 @@ disp('Setup started')
 tic
 %==========================================================================%
 % SWITCH SETUP SECTION %
-ADD_NOISE                   =       1;
+ADD_NOISE                   =       0;
 Noise_Level_additive        =       2; % noise level in uV
 Noise_Level_proportional    =    0.02; % proportional noise level in %
-SIM                         =       0;  % 0 - no simulation, 1 - simulations
-FUCK_YOU                    =       1;
+SIM                         =       0;  % 0 - no pert, 1 - with pert
+FUCK_YOU                    =       0;
 
-SOLVE       =       1;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
+SOLVE       =       0;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
+PLOT        =       0;
 
 %==========================================================================%
 % DEFINE MESH PARAMETERS %
 global Mesh
-Mesh.fn                             =   'Ilan_Rat_Brain_0p2to0p8mm_3V_1072558el';
+Mesh.fn                             =   'Cylindrical Tank';
 Mesh.vtx                            =   []; % =vtx;
 Mesh.units                          =   'm'; % meters
 Mesh.tri                            =   []; %=tri;
@@ -30,161 +31,46 @@ Mesh.sgrad                          =   []; % =D; % shape gradient functions
 Mesh.volumes                        =   []; % elements volumes
 Mesh.reg                            =   []; % =Reg; Gaussian regularisation matrix
 
-bla=load('.\mesh_prot_elec\Mesh_refined_electrode_30.mat');
-% %bla=load('.\mesh_prot_elec\Mesh_refined_all_electrodes_coarse.mat');
-% %bla=load('.\mesh_prot_elec\Mesh_refined_all_electrodes_slightly_finer_with_bigger_radius.mat');
-% %bla=load('.\mesh_prot_elec\Mesh_refined_all_electrodes_fine_with_smaller_radius.mat');
-% %bla = load('.\mesh_prot_elec\Mesh_huge_coarsely_refined_electrode_30.mat');
-% %bla = load('.\mesh_prot_elec\Mesh_refined_all_electrodes_coarse_with_big_radius.mat');
-% %bla = load('.\mesh_prot_elec\Mesh_refined_all_electrodes_even_coarser_with_large_radius.mat');
-Mesh.vtx = bla.Nodes(:,1:3)/1000;
-Mesh.tri = double(bla.Tetra(1:length(bla.Tetra)-length(find(bla.Tetra==0))/5,1:4)); %cut away zeros at the end of Tetra
-[Mesh.vtx, Mesh.tri] = removeisolatednode(Mesh.vtx, Mesh.tri);
-% 
-mat_ref = double(bla.Tetra(1:length(bla.Tetra)-length(find(bla.Tetra==0))/5,5));
-mat_ref(mat_ref == 1) = 0.15;   % white matter
-mat_ref(mat_ref == 2) = 0.3;    % grey matter
-mat_ref(mat_ref == 3) = 1.79;   % CSF
-mat_ref(mat_ref == 4) = 0.44;   % dura mater
-mat_ref(mat_ref == 5) = 0.018;  % skull
-mat_ref(mat_ref == 6) = 0.0001; % air
-mat_ref(mat_ref == 7) = 0.44;   % scalp
 
-% bla = load('.\mesh_prot_elec\TA052.mat');
-% Mesh.vtx = bla.vtx/1000;
-% Mesh.tri = bla.tri;
-% mat_ref = bla.mat_ref;
-% pos = bla.pos/1000;
+% load existing mesh
+M=load('..\resources\SA0602.mat'); %cyl tank 32 chn from zz
 
-%mat_ref = 0.2*ones(size(mat_ref));
+% adjust geometry here
 
-% bla = load('.\mesh_prot_elec\TA052.mat');
-% Mesh.vtx = bla.vtx/1000.;
-% Mesh.tri = bla.tri;
-% mat_ref = bla.mat_ref;
-% pos = bla.pos/1000.;
 
-clear bla
+%set geometry
+Mesh.vtx = M.vtx;
+Mesh.tri = M.tri;
+
+%set conductivities
+mat_ref(M.mat_ref ==1) = 0.35;
 
 %==========================================================================%
 % DEFINE FEM PARAMETERS
 global Fem
-Fem.current                         =   133e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
-% Fem.elec_diam                       =   .6e-3;% electrode diamter in meters
-Fem.elec_diam                       =   7e-3;% electrode diameter in meters
+Fem.current                         =   300e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
+Fem.elec_diam                       =   11.5e-3;% electrode diameter in meters
 Fem.materials_fn                    =   [];
 Fem.elec_method                     =   's'; % electrodes assigning method 'n', 's', 'm', 'v' closest node, closest elemt centre, nodes within Elec_diam/2 from remote-most surface coordinate, nodes within Elec_diam/2
 Fem.df                              =   []; % df;
 Fem.elec                            =   []; % elec;
 Fem.gnd                             =   []; % gnd_ind;
 Fem.I                               =   []; % I - sources matrix
-Fem.zc                              =   1e3 ; % contact impedance (could be a vector at the length of the number of electrodes);
+Fem.zc                              =   200 ; % contact impedance (could be a vector at the length of the number of electrodes);
 Fem.E                               =   []; % E; FEM system matrix
 Fem.isotropy                        =   true; % define whether a model is Isotropic or anisotropic
 
 % ==========================================================================%
 % DEFINE THE PROTOCOL %
+P=load('..\resources\SA060_prt.mat');
 
-%Fem.prt                             =   prt;
-%Fem.prt = [1 30 2 7];%; 1 2 3 4;1 3 2 4;1 4 2 3;2 3 1 4;2 4 1 3;3 4 1 2];% load('mesh_prot_elec/eeg31b.prt');%
-%Fem.prt = load('mesh_prot_elec/eeg31b.prt');
-%load('mesh_prot_elec/NCoptimal_inc_meas.mat');
-%Fem.prt = NCopt;
+%adjust positions here
 
-% Fem.prt = [1	30	2	7   
-% 1	30	7	17
-% 1	30	17	27
-% 1	30	29	23
-% 1	30	23	13
-% 1	30	13	3
-% 1	30	18	31
-% 1	30	31	28
-% 1	30	28	12
-% 1	30	4	9]; %POLAR INJECTION
-Fem.prt = [26	30	2	7   
-26	30	7	17
-26	30	17	27
-26	30	29	23
-26	30	23	13
-26	30	13	3
-26	30	18	31
-26	30	31	28
-26	30	28	12
-26	30	4	9]; %ADJACENT INJECTION
-% Fem.prt = [31	1	2	7   
-% 31	1	7	17
-% 31	1	17	27
-% 31	1	29	23
-% 31	1	23	13
-% 31	1	13	3
-% 31	1	18	30
-% 31	1	30	28
-% 31	1	28	12
-% 31	1	4	9]; %Check electrode 31
-%Fem.prt = [Fem.prt(:,3:4) Fem.prt(:,1:2)];
-% Fem.prt = [1, 30, 2, 7
-%     1, 2, 3, 4
-%     1, 3, 4, 2
-%     1, 4, 2, 3
-%     2, 3, 1, 4
-%     2, 4, 1, 3
-%     30, 1, 7, 2]; % TA052 test protocol
+Fem.prt = P.prt_full;
 
-load('.\mesh_prot_elec\correct_pos.mat')
-Fem.pos                             =   pos;
-Mesh.pos                            =   pos;
-Fem.gnd_pos                         =   [0.1337000, 0.0125200, 0.0550700];%[0.1337000, 0.0125200, 0.0550700];%[0, -0.104467562567864, -0.0480000000021847];% %arbitrarily chosen as the CLA marker
-Fem.elec_diam                       =   repmat(Fem.elec_diam,length(Fem.pos),1); % electrode diameter in meters as a vector
-Fem.elec_diam(30)                   =   7.0e-3;
-%Fem.elec_diam(30)                   =   15.00e-3 - 2.86e-3 - 1.32e-3 - 0.67e-3 USW; %adjacent injection. step size is 10 to increase convergence speed.
-
-Sigma1_change_factor                =   1.01; % 1% simulated perturbation change
-Sigma2_change_factor                =   1.00;
-
-%==========================================================================%
-% CHANGE POSITION OF ELECTRODE 30
-%size_of_change = -70e-4 + 11.32e-4 + 12.26e-4 + 19.27e-4 + 9.72e-4 + 6.59e-4 + 8.07e-4 + 5.52e-4 + 8.45e-4 + 4.47e-4 + 4.16e-4 + 4.33e-4 + 5.81e-4 + 2.44e-4...
-%                + 2.44e-4 + 3.22e-4 + 3.22e-4 +  3.11e-4 + 2.78e-4; % X these are with filtered Jacobian jac(<1e-5) = inf
-%size_of_change = size_of_change + 2.78e-3 - 0.47e-3; % X from here on I used a step width of 1e-2 for faster convergence. ( i.e. (1./test(:,30))'*diff * -1e-3 )
-%size_of_change = -70e-4 + 1.317e-3 + 1.631e-3 + 0.676e-3 + 1.236e-3 + 1.336e-3 + 0.521e-3 + 0.811e-3 + 0.409e-3; % Y stepsize is 1e-2 => inv(elec_jac(:,30)'*elec_jac(:,30)) * elec_jac(:,30)' * diff * -1e-2
-%size_of_change = size_of_change + 7.722e-3 - 1.675e-3; % Y from here on I used a step width of 1e-1 for faster convergence.
-%size_of_change = -70e-4 + 5.75e-4 + 45.83e-4 - 6.09e-4 - 5*4.15e-4 + 68.02e-4 - 3*3.07e-4 - 3*1.69e-4 - 5*4.98e-4; %this is for electrode 1 (very coarse). stepsize is 1e-2
-%size_of_change = -70e-4 + 181.0e-4 - 56.09e-4 + 23.36e-4 - 15.02e-4 USW; %adjacent injection, step size is 1e-1
-%size_of_change = 40e-4 - 17e-4 - 17e-4 - 8.5e-4 - 9.5e-4 - 5.3e-4 - 5.1e-4 - 5.1e-4 + -5e-4 - 5e-4; % electrode 1 which is very coarsely refined. Step size is 1e-2. Towards the end it goes in wrong direction at some point around -27e-4
-%size_of_change = 40e-4 - 15.5e-4 - 20.7e-4 - 7.3e-4 - 8.2e-4 - 4.9e-4 - 4.0e-4 - 4.0e-4 - 5*1.2e-4 - 5*0.9e-4; %this is for electrode one using the full protocol.
-size_of_change = 0e-4;
-%size_of_change = -70e-4 + 202.8e-4 - 107.4e-4 + 47.8e-4 - 2e-4;
-electrode_nr = 30;
-
-[m,n]=size(coords);
-coordinates = zeros(m*n/3,3);
-for i = 1:n/3
-    coordinates(1+(i-1)*m:i*m,:) = coords(:,1+(i-1)*3:i*3);
-end
-
-dist=(sum((coordinates-repmat(Fem.pos(electrode_nr,:),size(coordinates,1),1)).^2,2)).^0.5;
-[~,idx]=min(dist);
-
-areaORposition = 1;
-if areaORposition == 1 % jacobian with respect to x-coordinate
-    if dist(idx+m)<dist(idx-m) % electrode is closer to x+1 than x-1
-        vector = coordinates(idx+m,:)-coordinates(idx,:);
-        vector = vector/norm(vector)*size_of_change;
-    else
-        vector = coordinates(idx,:)-coordinates(idx-m,:);
-        vector = vector/norm(vector)*size_of_change;
-    end
-else % jacobian with respect to y-coordinate
-    if dist(idx+1)<dist(idx-1) % electrode is closer to y+1 than y-1
-        vector = coordinates(idx+1,:)-coordinates(idx,:);
-        vector = vector/norm(vector)*size_of_change;
-    else
-        vector = coordinates(idx,:)-coordinates(idx-1,:);
-        vector = vector/norm(vector)*size_of_change;
-    end
-end
-
-Fem.pos(electrode_nr,:) = Fem.pos(electrode_nr,:) + vector;
+Fem.pos                             =   M.pos;
+Mesh.pos                            =   M.pos;
+Fem.gnd_pos                         =   M.gnd_pos; %SA060 GND
 
 
 %==========================================================================%
@@ -245,7 +131,7 @@ rmask_ind                           =   find(Sol.rmask);
 
 
 toc
-display('SuperSolver starts...')
+disp('SuperSolver starts...')
 tic
 %==========================================================================%
 % MESH OPTIMISATION AND PROCESSING
@@ -256,10 +142,6 @@ tic
 %==========================================================================%
 % ASSIGN SURFACES TO EACH ELECTRODE %
 [Fem.elec, Mesh.cnts, Fem.srf_area, Fem.center_of_mass]     =   set_electrodes_var_3(Mesh.vtx, Mesh.srf, Fem.pos, Fem.elec_diam, Fem.elec_method);
-
-% print center of mass and area of electrode 30
-fprintf('Electrode 30\nArea: %6.10f \nCenter of mass: %6.10f , %6.10f , %6.10f \n', Fem.srf_area(30), Fem.center_of_mass(30,1), Fem.center_of_mass(30,2), Fem.center_of_mass(30,3))
-
 
 %==========================================================================%
 % CHOOSE THE GROUND INDEX %
@@ -288,9 +170,9 @@ disp('Forward modelling starts')
 % BOUNDARY VOLTAGE GENERATION %
 fwd_parm_validator(); % validates that the parameters entered are valid
 
-if SIM % CALCULATE FORWARD FOR PERTURBED CASE 
+if SIM % CALCULATE FORWARD FOR PERTURBED CASE
     %% set the perturbation
-
+    
     strokelocation = [0.13, 0.16, 0.11];
     %strokelocation = [0.1262282,0.11792685,0.0958625];
     %strokelocation = [0,0,0];
@@ -346,7 +228,7 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     Fwd.measurement_field           =   zeros(size(Fem.I,1),length(Fem.prt));
     [Fwd]                           =   adjoint_fields_9(Fem.E);
     toc
-  qqqq  
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     %TIME FOR FWD IS 52 mins %
     %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -361,7 +243,7 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     %======================================================================%
     % PROGRESS %
     disp('finished J')
-
+    
     %====== interrupt here if no reconstruction should be made ======%
     %stop
     %================================================================%
@@ -370,19 +252,6 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     diff_data = Data.bnd_v_c - Data.bnd_v;
     
     %% ZERO ORDER TIKHONOV
-    disp('starting zero order tikhonov')
-    
-    %=== Gustavo reconstruction on TA052 ===%
-    
-    %L = gen_Laplacian_matrix(xyz,nbor_dist);
-    %P = inv(full(L'*L));
-    
-    %[U,S,V] = svd(Sens.J,'econ');
-    %lambda = logspace(-12,0,3000);
-    %nfold = size(Data.bnd_v,1);
-    %[solutions,cv_error] = tikhonov_0order_CV(Sens.J,diff_data,lambda,nfold,U,S,V,true);
-    
-    %=== PCH reconstruction on hexahedral mesh ===%
     
     load('.\mesh_prot_elec\TA052_hex.mat');
     J_hex = jacobian_hexagoniser(Sens.J,TA052_hex);
@@ -401,8 +270,8 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     %% FIRST ORDER TIKHONOV
     disp('starting first order tikhonov');
     
-    xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+...
-         TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:)+TA052_hex.Nodes(TA052_hex.Hex(:,7),:)+TA052_hex.Nodes(TA052_hex.Hex(:,8),:))./8;
+    xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+...
+        TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:))./6;
     L = gen_Laplacian_matrix(xyz,1e-2);
     [U,sm,X,V,W] = cgsvd(J_hex,L);
     [x_lambda_1,rho_1,eta_1] = tikhonov(U,sm,X,diff_data,lambda);
@@ -412,6 +281,6 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     [min_lambda1,min_index1] = min(abs(lambda-ones(size(lambda))*reg_c));
     
     disp('done with first order tikhonov');
-
+    
     
 end
