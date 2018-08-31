@@ -1,4 +1,4 @@
-function [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod);
+function [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod)
 % Usage: [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod);
 %
 % General:

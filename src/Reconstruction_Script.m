@@ -43,7 +43,6 @@ Mesh.vtx = M.vtx;
 Mesh.tri = M.tri;
 
 %set conductivities
-mat_ref=zeros(size(M.mat_ref)); % vector must be nelem x 1 
 mat_ref(M.mat_ref ==1) = 0.35;
 
 %==========================================================================%

@@ -1,4 +1,4 @@
-function [grd_ind] = set_ground_8(vtx,srf,grd_pos,cnts,PLOT)
+function [grd_ind] = set_ground_8(vtx,srf,grd_pos,e,PLOT)
 % Usage: [grd_ind] = set_ground_8(vtx,srf,grd_pos,cnts)
 %
 % General:
