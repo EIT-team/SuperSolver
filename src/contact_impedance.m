@@ -15,7 +15,7 @@ global Fem Data
 % in case there is no compliance data file and the contact impedance is given as a scalar
 if isempty(Data_comp_fn)
     if (length(Fem.zc)<2)
-        Zc = Fem.zc * ones(length(Fem.pos),1);
+        Zc = Fem.zc * ones(size(Fem.pos,1),1);
     end
     return
 end
