@@ -1,4 +1,4 @@
-function [Zc] = contact_impedance(Data_comp_fn, freqs);
+function [Zc] = contact_impedance(Data_comp_fn, freqs)
 % Usage: [Zc] = contact_impedance(Data_comp_fn, freqs)
 %
 % General: estimate contact impedance out of the 2 terminal measurements data file. this function is temporarly, until contact impedance recovary would be embedded in the reconstruction procedure
