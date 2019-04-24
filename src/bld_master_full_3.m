@@ -1,4 +1,4 @@
-function [Ef] = bld_master_full_3(mat)
+function [Ef,Fem,Mesh] = bld_master_full_3(mat,Fem,Mesh)
 % Usage: [Ef] = bld_master_full_3(mat);
 %
 % General: system matrix assembling based on the complete electrode model 
@@ -18,7 +18,7 @@ function [Ef] = bld_master_full_3(mat)
 % Output:
 % Ef - un-referenced system matrix {n x n}
 %------------------------------------------------------------------------------------------------------------------------
-global Mesh Fem Progress 
+% global Mesh Fem Progress 
 
 if nargin == 0 
     mat = Sol.current;
@@ -35,7 +35,7 @@ end
 if length(Fem.zc) == er
     %column vector zc with the contact impedances in [Ohms] is required
 
-    [Ef] = bld_master_2(mat);
+    [Ef,Mesh,Fem] = bld_master_2(mat,Mesh,Fem);
 
     vertos = sparse(zeros(vr,er));
     horos = sparse(zeros(er,vr+er));

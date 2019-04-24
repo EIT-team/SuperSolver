@@ -1,4 +1,4 @@
-function [J] = jacobian_3d_7(V, v_f, Ela)
+function [J] = jacobian_3d_7(Fem,Fwd,Mesh,V, v_f, Ela)
 % Usage:[J] = jacobian_3d_7(V, v_f, Ela,);
 %
 % General:
@@ -14,7 +14,7 @@ function [J] = jacobian_3d_7(V, v_f, Ela)
 % Output:
 % J - Jacobian {no. of measurements x k} or for anisotropic case {no. of measurements x 6k} 
 %------------------------------------------------------------------------------------------------------------------------
-global Fem Fwd Mesh
+%global Fem Fwd Mesh
 
 if ~isempty(Mesh)
     [nv, dimen] = size(Mesh.vtx);  % number of vertices and dimension
@@ -22,7 +22,7 @@ if ~isempty(Mesh)
     Ela = sparse( (1:dimen*ns), (1:dimen*ns),kron( Mesh.support.',ones(1,dimen)) );
 end
 
-if sum(Fem.df) ~= size(v_f,2);
+if sum(Fem.df) ~= size(v_f,2)
     error('Mismatched data input');
 end
 

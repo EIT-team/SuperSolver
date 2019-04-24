@@ -1,4 +1,4 @@
-function [E] = fem_master_full_4(mat)
+function [E,Fem,Mesh] = fem_master_full_4(mat,Fem,Mesh)
 % Usage: [E] = fem_master_full_4(mat);
 %
 % General:
@@ -12,8 +12,8 @@ function [E] = fem_master_full_4(mat)
 % E - full rank system matrix based on the 3D complete electrode model {n + no. of electrodes x n + no. of electrodes}
 %------------------------------------------------------------------------------------------------------------------------
 
-[Ef] = bld_master_full_3(mat);
-[E] = ref_master_2(Ef);
+[Ef,Fem,Mesh] = bld_master_full_3(mat,Fem,Mesh);
+[E,Fem,Mesh] = ref_master_2(Ef,Fem,Mesh);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This might become a part of the EIDORS suite

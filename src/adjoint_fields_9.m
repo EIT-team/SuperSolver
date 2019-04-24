@@ -1,4 +1,4 @@
-function [Fwd, flag, relres, iter] = adjoint_fields_9(E, current, tol, method);
+function [Fem,Fwd,Inv, flag, relres, iter] = adjoint_fields_9(Fem,Fwd,Inv,E, current, tol, method)
 %Usage: [Fwd, flag, relres, iter] = adjoint_fields_9(E, current,tol, method);
 %
 % General:
@@ -49,7 +49,7 @@ function [Fwd, flag, relres, iter] = adjoint_fields_9(E, current, tol, method);
 % LH 15/12/05
 %------------------------------------------------------------------------------------------------------------------------
 % load the previous solution
-global Fem Fwd Inv
+%global Fem Fwd Inv
 
 % in case v_f was not defined externally
 if isempty(Fwd.measurement_field)
@@ -58,12 +58,12 @@ if isempty(Fwd.measurement_field)
 end
 
 % to be consistent with older versions
-if nargin < 2
+if nargin < 5
     current = 1; % 1 Amp   
 end
 
 % in case the user would like to override the chosen setting by the globals
-if nargin > 3
+if nargin > 6
     if length(tol) < 2
         Inv.fwd_drop_tol = 1e-5;% set preconditioner default tolerance in case it was not indicated
     end
@@ -82,7 +82,7 @@ if nargin > 3
             Inv.fwd_method = 'bicgstab';
         otherwise
             Inv.fwd_precond = 'ilu';
-            Inv.fwd_method = 'gmres'
+            Inv.fwd_method = 'gmres';
     end
 else % accept the globals settings
      E = Fem.E;

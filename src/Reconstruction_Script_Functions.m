@@ -10,12 +10,12 @@ Noise_Level_proportional    =    0.02; % proportional noise level in %
 SIM                         =       0;  % 0 - no pert, 1 - with pert
 FUCK_YOU                    =       0;
 
-SOLVE       =       0;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
+SOLVE       =       1;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
 PLOT        =       0;
 
 %==========================================================================%
-% DEFINE MESH PARAMETERS %
-global Mesh
+% DEFINE MESH PARAMETERS %%
+% global Mesh
 Mesh.fn                             =   'Cylindrical Tank';
 Mesh.vtx                            =   []; % =vtx;
 Mesh.units                          =   'm'; % meters
@@ -46,10 +46,9 @@ Mesh.tri = M.tri;
 mat_ref=M.mat_ref;
 mat_ref(mat_ref==1) = 0.35;
 % NEED TO VALIDATE MAT_REF = N x1
-
 %==========================================================================%
 % DEFINE FEM PARAMETERS
-global Fem
+% global Fem
 Fem.current                         =   300e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
 Fem.elec_diam                       =   11.5e-3;% electrode diameter in meters
 Fem.materials_fn                    =   [];
@@ -77,7 +76,7 @@ Fem.gnd_pos                         =   M.gnd_pos; %SA060 GND
 
 %==========================================================================%
 % DEFINE FORWARD SOLVER PARAMETERS
-global Fwd
+% global Fwd
 Fwd.fn                              =   []; % file containing all the forward model parameters
 Fwd.method                          =   'bicgstab'; % set forward solver method (either 'pcg', 'bicgstab', 'minres' or 'gmres' for pcg, stab BiCG, MinRes, GMRes)
 Fwd.tol                             =   1e-12; % fwd solution relative residual tolerance (default 1e-12)
@@ -90,7 +89,7 @@ Fwd.measurement_field               =   []; % =v_f; % nodal measurement field po
 
 %==========================================================================%
 % DEFINE SENSITIVITY PARAMETERS
-global Sens
+% global Sens
 Sens.J                              =   []; % J - Jacobian
 Sens.norm                           =   'r'; % either [], R, C or RC for non, row, column, row and column normalisation
 Sens.C                              =   []; % C - column normalisation matrix (default Ikxk)
@@ -98,7 +97,7 @@ Sens.R                              =   []; % R; row normalisation matrix (defau
 
 %==========================================================================%
 % DEFINE INVERSE PROBLEM PARAMETERS
-global Inv Sol
+% global Inv Sol
 Inv.fwd_method                      =   'bicgstab'; % set forward solver method within inverse framework (either 'pcg', 'bicgstab', 'minres' or 'gmres' for pcg, stab BiCG, MinRes, GMRes)
 Inv.fwd_tol                         =   1e-12;%1e-12; % forward solution within inverse framework relative residual tolerance (default 1e-12)
 Inv.fwd_maxit                       =   10000;%100; % forward solution within inverse framework maximum number of iterations (default 100)
@@ -135,6 +134,7 @@ rmask_ind                           =   find(Sol.rmask);
 toc
 disp('SuperSolver starts...')
 tic
+%%
 %==========================================================================%
 % MESH OPTIMISATION AND PROCESSING
 [Mesh.vtx,Mesh.tri]                 =   optimize6_c(Mesh.vtx,Mesh.tri,true,0);
@@ -156,7 +156,8 @@ tic
 %==========================================================================%
 % SET CONTACT IMPEDANCE %
 if length(Fem.zc) < 2
-    [Fem.zc]                        =   contact_impedance([]);
+%     [Fem.zc]                        =   contact_impedance(Fem);
+    Fem.zc = Fem.zc * ones(size(Fem.pos,1),1);
 end
 
 %==========================================================================%
@@ -170,7 +171,7 @@ disp('Forward modelling starts')
 
 %==========================================================================%
 % BOUNDARY VOLTAGE GENERATION %
-fwd_parm_validator(); % validates that the parameters entered are valid
+fwd_parm_validator(Fwd,Fem); % validates that the parameters entered are valid
 
 if SIM % CALCULATE FORWARD FOR PERTURBED CASE
     %% set the perturbation
@@ -209,13 +210,14 @@ toc
 
 % REPEAT FOR BASELINE/NON-PERTURBED CASE %
 tic
-[Fem.E]                             =   fem_master_full_4(Sol.ref);
+[E,Fem,Mesh]                             =   fem_master_full_4(Sol.ref,Fem,Mesh);
+Fem.E=E;
 %[Fem.E]                             =   fem_master_full_4(Sol.ref_c);
 Fwd.current_field                   =   zeros(size(Fem.I));
 toc
 tic
-[Fwd]                               =   forward_solver_9(Fem.E,Fem.I);
-[Data.bnd_v]                        =   get_boundary_meas_2 (Fwd.current_field);
+[Fwd]                               =   forward_solver_9(Fwd,Fem);
+[Data.bnd_v]                        =   get_boundary_meas_2 (Fwd,Fem,Mesh);
 toc
 tic
 
@@ -228,7 +230,7 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     %======================================================================%
     % SOLVE THE FORWARD SOLUTION FOR THE MEASUREMENT FIELD %
     Fwd.measurement_field           =   zeros(size(Fem.I,1),length(Fem.prt));
-    [Fwd]                           =   adjoint_fields_9(Fem.E);
+    [Fem,Fwd,Inv]                           =   adjoint_fields_9(Fem,Fwd,Inv,Fem.E);
     toc
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -237,7 +239,7 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     %======================================================================%
     % CONSTRUCT THE JACOBIAN, THE FOCUSING IS DONE WHEN INVERTING STAGE %
     tic
-    [Sens.J]                        =   jacobian_3d_7(Fwd.current_field, Fwd.measurement_field);%3.9mins
+    [Sens.J]                        =   jacobian_3d_7(Fem,Fwd,Mesh,Fwd.current_field, Fwd.measurement_field);%3.9mins
     toc
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     %TIME FOR SENS IS 8 mins %
@@ -246,43 +248,43 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     % PROGRESS %
     disp('finished J')
     
-    %====== interrupt here if no reconstruction should be made ======%
-    %stop
-    %================================================================%
-    
-    diff_data0 = Data.bnd_v_c0 - Data.bnd_v;
-    diff_data = Data.bnd_v_c - Data.bnd_v;
-    
-    %% ZERO ORDER TIKHONOV
-    
-    load('.\mesh_prot_elec\TA052_hex.mat');
-    J_hex = jacobian_hexagoniser(Sens.J,TA052_hex);
-    
-    lambda = logspace(-12,0,3000);
-    
-    [U,sm,X,V,W] = cgsvd(J_hex,eye(size(J_hex,2),size(J_hex,2)));
-    [x_lambda_0,rho_0,eta_0] = tikhonov(U,sm,X,diff_data,lambda);
-    
-    % find L-curve corner and thus the optimal lambda
-    [reg_c,rho_c,eta_c] = l_corner(rho_0,eta_0,lambda);
-    [min_lambda0,min_index0] = min(abs(lambda-ones(size(lambda))*reg_c));
-    
-    disp('done with zero order tikhonov');
-    
-    %% FIRST ORDER TIKHONOV
-    disp('starting first order tikhonov');
-    
-    xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+...
-        TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:))./6;
-    L = gen_Laplacian_matrix(xyz,1e-2);
-    [U,sm,X,V,W] = cgsvd(J_hex,L);
-    [x_lambda_1,rho_1,eta_1] = tikhonov(U,sm,X,diff_data,lambda);
-    
-    % find L-curve corner and thus the optimal lambda
-    [reg_c,rho_c,eta_c] = l_corner(rho_1,eta_1,lambda);
-    [min_lambda1,min_index1] = min(abs(lambda-ones(size(lambda))*reg_c));
-    
-    disp('done with first order tikhonov');
+% %     %====== interrupt here if no reconstruction should be made ======%
+%     %stop
+%     %================================================================%
+%     
+%     diff_data0 = Data.bnd_v_c0 - Data.bnd_v;
+%     diff_data = Data.bnd_v_c - Data.bnd_v;
+%     
+%     %% ZERO ORDER TIKHONOV
+%     
+%     load('.\mesh_prot_elec\TA052_hex.mat');
+%     J_hex = jacobian_hexagoniser(Sens.J,TA052_hex);
+%     
+%     lambda = logspace(-12,0,3000);
+%     
+%     [U,sm,X,V,W] = cgsvd(J_hex,eye(size(J_hex,2),size(J_hex,2)));
+%     [x_lambda_0,rho_0,eta_0] = tikhonov(U,sm,X,diff_data,lambda);
+%     
+%     % find L-curve corner and thus the optimal lambda
+%     [reg_c,rho_c,eta_c] = l_corner(rho_0,eta_0,lambda);
+%     [min_lambda0,min_index0] = min(abs(lambda-ones(size(lambda))*reg_c));
+%     
+%     disp('done with zero order tikhonov');
+%     
+%     %% FIRST ORDER TIKHONOV
+%     disp('starting first order tikhonov');
+%     
+%     xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+...
+%         TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:))./6;
+%     L = gen_Laplacian_matrix(xyz,1e-2);
+%     [U,sm,X,V,W] = cgsvd(J_hex,L);
+%     [x_lambda_1,rho_1,eta_1] = tikhonov(U,sm,X,diff_data,lambda);
+%     
+%     % find L-curve corner and thus the optimal lambda
+%     [reg_c,rho_c,eta_c] = l_corner(rho_1,eta_1,lambda);
+%     [min_lambda1,min_index1] = min(abs(lambda-ones(size(lambda))*reg_c));
+%     
+%     disp('done with first order tikhonov');
     
     
 end

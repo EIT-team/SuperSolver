@@ -1,4 +1,4 @@
-function [Ef] = bld_master_2(mat);
+function [Ef,Mesh,Fem] = bld_master_2(mat,Mesh,Fem)
 % Usage: [Ef] = bld_master_2(mat);
 %
 % General: Builds up the main compartment (GAP-SHUNT) of the system matrix for the complete electrode model. It is called within the function fem_master_full.
@@ -13,7 +13,7 @@ function [Ef] = bld_master_2(mat);
 %
 % 15/12/05 LH
 %--------------------------------------------------------------------------
-global Mesh Fem
+% global Mesh Fem
 
 [n, dimv] = size(Mesh.vtx);  % number of vertices and dimension
 k = size(Mesh.tri,1); % number of simplices
@@ -23,7 +23,7 @@ if nargin ==0
 end
 
 % generate sgradients of the shape functions over each element {3*k x n} and support (elements volumes) {k x 1}
-[Mesh.sgrad, Mesh.support] = shape_functions_constructor(); % should work like this as well
+[Mesh.sgrad, Mesh.support] = shape_functions_constructor(Mesh.vtx,Mesh.tri);
 
 if length(mat) ~= length(Mesh.support)
     error('Some elements have not been assigned');

@@ -1,4 +1,4 @@
-function [bnd_v] = get_boundary_meas_2(V)
+function [bnd_v] = get_boundary_meas_2(Fwd,Fem,Mesh)
 % Usage:  [bnd_v] = get_boundary_meas_2(V);
 %
 % General:
@@ -11,12 +11,10 @@ function [bnd_v] = get_boundary_meas_2(V)
 % Output:
 % bnd_v - calculated boundary measurements {no. of measurements x 1}
 %------------------------------------------------------------------------------------------------------------------------
-global Fem Fwd Mesh
 
-if nargin == 0
-    V = Fwd.current_field
-end
 
+V = Fwd.current_field;
+    
 curr_index = [];
 bnd_v = zeros(1, size(Fem.prt,1));
 
