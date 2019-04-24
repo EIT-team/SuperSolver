@@ -10,13 +10,13 @@ Noise_Level_proportional    =    0.02; % proportional noise level in %
 SIM                         =       0;  % 0 - no pert, 1 - with pert
 FUCK_YOU                    =       0;
 
-SOLVE       =       1;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
+SOLVE       =       0;  % 0 - stops after boundary voltage generation, 1 - runs through to inversion
 PLOT        =       0;
 
 %==========================================================================%
 % DEFINE MESH PARAMETERS %
 global Mesh
-Mesh.fn                             =   'Cylindrical Tank';
+Mesh.fn                             =   'NNsmallmesh';
 Mesh.vtx                            =   []; % =vtx;
 Mesh.units                          =   'm'; % meters
 Mesh.tri                            =   []; %=tri;
@@ -33,24 +33,25 @@ Mesh.reg                            =   []; % =Reg; Gaussian regularisation matr
 
 
 % load existing mesh
-M=load('..\resources\SA060.mat'); %cyl tank 32 chn from zz
+M=load('C:\Users\djave\Tanks\Neonate\Forward_Solver\output\NNSuperSolverMesh.mat'); %cyl tank 32 chn from zz
 
 % adjust geometry here
 
 
 %set geometry
-Mesh.vtx = M.vtx;
-Mesh.tri = M.tri;
+Mesh.vtx = M.Mesh.Nodes;
+Mesh.tri = M.Mesh.Tetra;
 
 %set conductivities
-mat_ref=M.mat_ref;
-mat_ref(mat_ref ==1) = 0.35;
+mat_ref=zeros(size(M.Mesh.mat_ref)); % vector must be nelem x 1 
+mat_ref(M.Mesh.mat_ref ==1) = 0.4;
+mat_ref(M.Mesh.mat_ref ==2) = 0.03;
 
 %==========================================================================%
 % DEFINE FEM PARAMETERS
 global Fem
-Fem.current                         =   300e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
-Fem.elec_diam                       =   11.5e-3;% electrode diameter in meters
+Fem.current                         =   240e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
+Fem.elec_diam                       =   10e-3;% electrode diameter in meters
 Fem.materials_fn                    =   [];
 Fem.elec_method                     =   's'; % electrodes assigning method 'n', 's', 'm', 'v' closest node, closest elemt centre, nodes within Elec_diam/2 from remote-most surface coordinate, nodes within Elec_diam/2
 Fem.df                              =   []; % df;
@@ -63,15 +64,19 @@ Fem.isotropy                        =   true; % define whether a model is Isotro
 
 % ==========================================================================%
 % DEFINE THE PROTOCOL %
-P=load('..\resources\SA060_prt.mat');
+% P=load('C:\Users\djave\Tanks\Neonate\Forward_Solver\output\NN2016Prt.mat');
+%Fem.prt = P.NN_Prt_full(P.NN_keep_idx,:);
+% Fem.prt = P.NN_Prt_full(:,:);
+
+
+P=load('C:\Users\djave\OneDrive - University College London\neonate_parallel\protocol_choice\InjectionOptPrt.mat');
+Fem.prt=P.prt;
 
 %adjust positions here
 
-Fem.prt = P.prt_full;
-
-Fem.pos                             =   M.pos;
-Mesh.pos                            =   M.pos;
-Fem.gnd_pos                         =   M.gnd_pos; %SA060 GND
+Fem.pos                             =   M.Mesh.elec_pos;
+Mesh.pos                            =   M.Mesh.elec_pos;
+Fem.gnd_pos                         =   M.Mesh.gnd_pos;
 
 
 %==========================================================================%
@@ -245,43 +250,43 @@ if SOLVE % RUN THE REST OF THE FORWARD SOLVER AND INVERSION %
     % PROGRESS %
     disp('finished J')
     
-%     %====== interrupt here if no reconstruction should be made ======%
-%     %stop
-%     %================================================================%
-%     
-%     diff_data0 = Data.bnd_v_c0 - Data.bnd_v;
-%     diff_data = Data.bnd_v_c - Data.bnd_v;
-%     
-%     %% ZERO ORDER TIKHONOV
-%     
-%     load('.\mesh_prot_elec\TA052_hex.mat');
-%     J_hex = jacobian_hexagoniser(Sens.J,TA052_hex);
-%     
-%     lambda = logspace(-12,0,3000);
-%     
-%     [U,sm,X,V,W] = cgsvd(J_hex,eye(size(J_hex,2),size(J_hex,2)));
-%     [x_lambda_0,rho_0,eta_0] = tikhonov(U,sm,X,diff_data,lambda);
-%     
-%     % find L-curve corner and thus the optimal lambda
-%     [reg_c,rho_c,eta_c] = l_corner(rho_0,eta_0,lambda);
-%     [min_lambda0,min_index0] = min(abs(lambda-ones(size(lambda))*reg_c));
-%     
-%     disp('done with zero order tikhonov');
-%     
-%     %% FIRST ORDER TIKHONOV
-%     disp('starting first order tikhonov');
-%     
-%     xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+...
-%         TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:))./6;
-%     L = gen_Laplacian_matrix(xyz,1e-2);
-%     [U,sm,X,V,W] = cgsvd(J_hex,L);
-%     [x_lambda_1,rho_1,eta_1] = tikhonov(U,sm,X,diff_data,lambda);
-%     
-%     % find L-curve corner and thus the optimal lambda
-%     [reg_c,rho_c,eta_c] = l_corner(rho_1,eta_1,lambda);
-%     [min_lambda1,min_index1] = min(abs(lambda-ones(size(lambda))*reg_c));
-%     
-%     disp('done with first order tikhonov');
+    %====== interrupt here if no reconstruction should be made ======%
+    %stop
+    %================================================================%
+    
+    diff_data0 = Data.bnd_v_c0 - Data.bnd_v;
+    diff_data = Data.bnd_v_c - Data.bnd_v;
+    
+    %% ZERO ORDER TIKHONOV
+    
+    load('.\mesh_prot_elec\TA052_hex.mat');
+    J_hex = jacobian_hexagoniser(Sens.J,TA052_hex);
+    
+    lambda = logspace(-12,0,3000);
+    
+    [U,sm,X,V,W] = cgsvd(J_hex,eye(size(J_hex,2),size(J_hex,2)));
+    [x_lambda_0,rho_0,eta_0] = tikhonov(U,sm,X,diff_data,lambda);
+    
+    % find L-curve corner and thus the optimal lambda
+    [reg_c,rho_c,eta_c] = l_corner(rho_0,eta_0,lambda);
+    [min_lambda0,min_index0] = min(abs(lambda-ones(size(lambda))*reg_c));
+    
+    disp('done with zero order tikhonov');
+    
+    %% FIRST ORDER TIKHONOV
+    disp('starting first order tikhonov');
+    
+    xyz=(TA052_hex.Nodes(TA052_hex.Hex(:,1),:)+TA052_hex.Nodes(TA052_hex.Hex(:,2),:)+TA052_hex.Nodes(TA052_hex.Hex(:,3),:)+...
+        TA052_hex.Nodes(TA052_hex.Hex(:,4),:)+TA052_hex.Nodes(TA052_hex.Hex(:,5),:)+TA052_hex.Nodes(TA052_hex.Hex(:,6),:))./6;
+    L = gen_Laplacian_matrix(xyz,1e-2);
+    [U,sm,X,V,W] = cgsvd(J_hex,L);
+    [x_lambda_1,rho_1,eta_1] = tikhonov(U,sm,X,diff_data,lambda);
+    
+    % find L-curve corner and thus the optimal lambda
+    [reg_c,rho_c,eta_c] = l_corner(rho_1,eta_1,lambda);
+    [min_lambda1,min_index1] = min(abs(lambda-ones(size(lambda))*reg_c));
+    
+    disp('done with first order tikhonov');
     
     
 end
