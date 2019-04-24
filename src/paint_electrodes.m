@@ -1,4 +1,4 @@
-function paint_electrodes(sel,srf,vtx);
+function paint_electrodes(sel,srf,vtx)
 %function paint_electrodes(sel,srf,vtx);
 %
 %Auxilary function which plots the electrodes red at the boundaries.

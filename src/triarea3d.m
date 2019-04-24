@@ -1,4 +1,4 @@
-function [ta] = triarea3d(V);
+function [ta] = triarea3d(V)
 %[ta] = triarea3d(V);
 %
 %Function that calculates the area of a triangle 
