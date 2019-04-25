@@ -12,6 +12,11 @@ mat_ref(mat_ref==1) = 0.35;
 P=load('..\resources\SA060_prt.mat');
 
 [Mesh,Fem,Fwd,Inv,Sol] = supersolver_init(M.vtx,M.tri,mat_ref,M.pos,M.gnd_pos,P.prt_full);
+%change the electrode diameters etc.
+Fem.current                         =   300e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
+Fem.elec_diam                       =   11.5e-3;% electrode diameter in meters
+Fem.zc                              =   200 ; % contact impedance (could be a vector at the length of the number of electrodes);
+
 
 toc
 disp('SuperSolver starts...')
