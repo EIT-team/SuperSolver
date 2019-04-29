@@ -3,7 +3,7 @@ Ye olde EIT super solver, for those times you have to run in it matlab, or you w
 
 Now runs as a function, 
 
-```
+```matlab
 % initialise all the structures
 [Mesh,Fem,Fwd,Inv,Sol] = supersolver_init(vtx,tri,mat_ref,elec_pos,gnd_pos,prt_full);
 % setup system and boundary conditions
