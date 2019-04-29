@@ -1,4 +1,4 @@
-function [D, sp] = shape_functions_constructor(vtx,tri);
+function [D, sp] = shape_functions_constructor(vtx,tri)
 % Usage: [D, sp] = shape_functions_constructor(vtx,tri);
 %
 % General: construct shape functions gradients and normalised volumes
@@ -13,11 +13,10 @@ function [D, sp] = shape_functions_constructor(vtx,tri);
 %
 % 05/07/03 LH
 %--------------------------------------------------------------------------
-if nargin == 0
-    global Mesh
-    vtx = Mesh.vtx;
-    tri = Mesh.tri;
-end
+%if nargin == 0
+%     vtx = Mesh.vtx;
+%     tri = Mesh.tri;
+% end
 
 [nv, dimv] = size(vtx);  % number of vertices and dimension
 ns = size(tri,1); % number of simplices

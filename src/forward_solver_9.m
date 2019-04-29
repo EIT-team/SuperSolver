@@ -1,4 +1,4 @@
-function [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod)
+function [Fwd, flag, relres, iter] = forward_solver_9(Fwd,Fem, tol, fmethod)
 % Usage: [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod);
 %
 % General:
@@ -47,7 +47,6 @@ function [Fwd, flag, relres, iter] = forward_solver_9(E, I, tol, fmethod)
 % LH 10/2/04, last updated 15/12/05
 %------------------------------------------------------------------------------------------------------------------------
 % load previous solution
-global Fem Fwd
 
 % in case the user would like to override the chosen setting by the globals
 if nargin > 2

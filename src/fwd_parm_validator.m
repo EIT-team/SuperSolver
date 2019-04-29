@@ -1,4 +1,4 @@
-function fwd_parm_validator();
+function fwd_parm_validator(Fwd,Fem)
 % Usage: fwd_parm_validator();
 %
 % General: validates the forward parameters
@@ -9,7 +9,7 @@ function fwd_parm_validator();
 %
 % LH 15/12/05
 %==============================================================================%
-global Progress Fwd Fem
+% global Progress Fwd Fem
 
 switch lower(Fwd.method)
     case {'stabbicg','minres','gmres'}

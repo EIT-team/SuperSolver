@@ -1,4 +1,4 @@
-function [Er] = ref_master_2(E,sch);
+function [Er,Fem,Mesh] = ref_master_2(E,Fem,Mesh,sch)
 % Usage:[Er] = ref_master_2(E,sch);
 %
 % General: applying reference to the system. Modifying the system matrix to preserve uniqueness
@@ -16,7 +16,7 @@ function [Er] = ref_master_2(E,sch);
 % gnd_ind - ground index
 %
 %==============================================================================%
-global Mesh Fem
+% global Mesh Fem
 [nv,jnk] = size(Mesh.vtx);
 
 if nargin < 4
