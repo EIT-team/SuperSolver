@@ -1,6 +1,9 @@
 function [Mesh,Fem,Fwd,Inv,Sol,Data] = supersolver_runfwd(Mesh,Fem,Fwd,Inv,Sol)
-%UNTITLED3 Summary of this function goes here
+%supersolver_runfwd Summary of this function goes here
 %   Detailed explanation goes here
+
+
+disp('Supersolver running...');
 
 fwd_parm_validator(Fwd,Fem); % validates that the parameters entered 
 

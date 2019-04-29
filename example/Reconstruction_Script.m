@@ -1,5 +1,4 @@
 %% Initialise
-disp('Setup started')
 tic
 % load existing mesh
 M=load('..\resources\SA060.mat'); %cyl tank 32 chn from zz
@@ -13,25 +12,16 @@ P=load('..\resources\SA060_prt.mat');
 
 [Mesh,Fem,Fwd,Inv,Sol] = supersolver_init(M.vtx,M.tri,mat_ref,M.pos,M.gnd_pos,P.prt_full);
 %change the electrode diameters etc.
-Fem.current                         =   300e-6; % 50e-6;% [50uA in rat and tank expt, 400uA is some simulations]
+Fem.current                         =   300e-6; % uA
 Fem.elec_diam                       =   11.5e-3;% electrode diameter in meters
 Fem.zc                              =   200 ; % contact impedance (could be a vector at the length of the number of electrodes);
-
-
 toc
-disp('SuperSolver starts...')
-
-%% Setup
+%% Setup system
 
 [Mesh,Fem,Fwd,Inv,Sol] = supersolver_setup(Mesh,Fem,Fwd,Inv,Sol);
 
 toc
-disp('Setup stage is completed')
-disp('Forward modelling starts')
-
 %% run fwd
-
-
 [Mesh,Fem,Fwd,Inv,Sol,Data] = supersolver_runfwd(Mesh,Fem,Fwd,Inv,Sol);
 toc
 disp('finished forward')
