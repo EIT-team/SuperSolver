@@ -2,6 +2,8 @@ function [Mesh,Fem,Fwd,Inv,Sol] = supersolver_init(vtx,tri,mat_ref,pos,gnd_pos,p
 %supersolver_init Creates the structures needed for Supersolver 
 %   Detailed explanation goes here
 
+disp('Supersolver initialising...');
+
 %% Create Structures
 % some of these are overwritten but its easier having them all in one place
 
@@ -76,13 +78,13 @@ Inv.maxit                           =   12; % maximum number of iterations for n
 Inv.tol                             =   1e-5; % halting criteria for non-linear reconstruction  (defined by the differntial error)
 Inv.regularisation_fn               =   []; % regularisation matrix file name
 Inv.hyper_param                     =   'lc'; % regularisation hyper parameter selection approach (either 'lc', 'gcv', or 'kl' for L-curve, Generlised Cross Validation and KL distance)
-Inv_grid                            =   []; % inversion grid dimensions (if empty no base transforamtion is performed)
+Inv.grid                            =   []; % inversion grid dimensions (if empty no base transforamtion is performed)
 Inv.regpar                          =   false; % selection of the regularisation parameter by Juanito: does Tikhonov inversion, GCV parameter selection, and Row normalisation. If false TSVD with fix truncation value will be used only instead
 Inv.white                           =   false; % whitening of the noise
 
 %==========================================================================%
 % DEFINE SOLUTION PARAMETERS
-Sol.ref                             =   repmat(0.3,size(Mesh.tri,1),1); % S/m
+Sol.ref                             =   repmat(0.3,size(Mesh.tri,1),1); % S/m - generic conductivity to start with
 Sol.current                         =   []; % sol; % current solution
 Sol.rmask                           =   []; % rmask;  % enable focused reconstruction {ones for elements which requires reconstruction, 0 for the rest}
 Sol.t_fac                           =   []; % tfac; % spatial regularisation hyper parameter

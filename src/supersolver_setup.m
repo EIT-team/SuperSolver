@@ -1,8 +1,8 @@
 function [Mesh,Fem,Fwd,Inv,Sol] = supersolver_setup(Mesh,Fem,Fwd,Inv,Sol)
-%supersolver_setup Builds system matrix and sets up supersolver
+%supersolver_setup Setup boundary conditions system matrix and sets up supersolver
 %   Detailed explanation goes here
 
-
+disp('Supersolver setup...'); 
 %==========================================================================%
 % MESH OPTIMISATION AND PROCESSING
 [Mesh.vtx,Mesh.tri]                 =   optimize6_c(Mesh.vtx,Mesh.tri,true,0);
