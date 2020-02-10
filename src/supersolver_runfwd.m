@@ -3,7 +3,7 @@ function [Mesh,Fem,Fwd,Inv,Sol,Data] = supersolver_runfwd(Mesh,Fem,Fwd,Inv,Sol)
 %   Detailed explanation goes here
 
 
-disp('Supersolver running...');
+fprintf('Supersolver running...');
 
 fwd_parm_validator(Fwd,Fem); % validates that the parameters entered 
 
@@ -12,6 +12,8 @@ Fem.E=E;
 Fwd.current_field                   =   zeros(size(Fem.I));
 [Fwd]                               =   forward_solver_9(Fwd,Fem);
 [Data.bnd_v]                        =   get_boundary_meas_2 (Fwd,Fem,Mesh);
+
+fprintf('Done\n');
 
 end
 

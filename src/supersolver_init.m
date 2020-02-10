@@ -103,7 +103,7 @@ Mesh.tri = tri;
 
 %set conductivities
 % NEED TO VALIDATE MAT_REF = N x1
-Sol.ref                             =   mat_ref; % S/m
+Sol.ref                             =   double(mat_ref); % S/m ensure double
 
 %% Adjust Electrodes and Protocol
 

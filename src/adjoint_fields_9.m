@@ -156,7 +156,7 @@ switch lower(Inv.fwd_method)
         %markus
         setup.droptol = Inv.fwd_drop_tol;
         [L,U] = ilu(E,setup);
-        disp('start bicgstab');
+        fprintf('start bicgstab...');
         for ii=1:size(MC,2)
             [unique_v_f(:,ii),flag(ii),relres(ii),iter(ii),resvec]=pcg(E,I(:,ii),Inv.fwd_tol,Inv.fwd_maxit,L,U,Fwd.measurement_field(:,un_i(ii)));
             if flag(ii)

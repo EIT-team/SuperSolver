@@ -120,7 +120,7 @@ switch lower(Fwd.method)
 %         end
         setup.droptol = Fwd.drop_tol;
         [L,U] = ilu(E,setup);
-        disp('start bicgstab');
+        fprintf('start bicgstab...');
         for ii=1:d
             [Fwd.current_field(:,ii),flag(ii),relres(ii),iter(ii),resvec]=pcg(E,I(:,ii),Fwd.tol,Fwd.maxit,L,U,Fwd.current_field(:,ii));
             if flag(ii)
