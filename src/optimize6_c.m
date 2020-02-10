@@ -53,7 +53,10 @@ gr = gr + speye(nvtx);  %adds an identity sparse matrix since all nodes are self
 clear uintri_uniq  uintrix uintriy% v_uintrix v_uintriy
 
 if PLOT
-    figure; spy(gr);title('before');
+    figure; 
+    subplot(1,2,1);
+    spy(gr);
+    title('Connectivity before');
 end
 %--------------------------------------------------------------------------------------------------------------------------------
 
@@ -103,7 +106,8 @@ newgr = newgr + speye(nvtx);  %adds an identity sparse matrix since all nodes ar
 % dur = toc; disp(toc)
 
 if PLOT
-    figure;spy(newgr);title('after');
+    subplot(1,2,2)
+    spy(newgr);title('Connectivitiy after');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

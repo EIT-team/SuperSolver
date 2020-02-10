@@ -20,7 +20,7 @@ disp('Supersolver setup...');
 
 %==========================================================================%
 % CHOOSE THE GROUND INDEX %
-[Fem.gnd_ind]                       =   set_ground_force(Mesh.vtx, Mesh.srf, Fem.gnd_pos,PlotFlag);
+[Fem.gnd_ind]                       =   set_ground_force(Mesh.vtx, Fem.gnd_pos,PlotFlag);
 
 %==========================================================================%
 % SET CURRENTS %
