@@ -1,4 +1,4 @@
-function [elec, cnts, srf_area, center_of_mass] = set_electrodes_var_3(vtx, srf, pos, w, method, fig)
+function [elec, cnts, srf_area, center_of_mass] = set_electrodes_var_3(vtx, srf, pos, w, method, PlotFlag)
 % Usage: [elec, cnts, srf_area] = set_electrodes_var_3(vtx, srf, pos, w, method, fig);
 %
 % General:
@@ -155,7 +155,7 @@ sels=sels';
 center_of_mass = center_of_mass ./ (srf_area'*ones(1,3));
 
 %-------------------------------plot the electrodes---------------------------------------
-if ~exist('fig')
+if PlotFlag
     %figure, title('electrodes');
     trimesh(srf,vtx(:,1),vtx(:,2),vtx(:,3),'FaceAlpha',0.5);
     colormap([0 0 0]);
